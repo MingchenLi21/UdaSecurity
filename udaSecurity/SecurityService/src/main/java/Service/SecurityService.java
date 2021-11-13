@@ -38,8 +38,11 @@ public class SecurityService {
     public void setArmingStatus(ArmingStatus armingStatus) {
         if(armingStatus == ArmingStatus.DISARMED) {
             setAlarmStatus(AlarmStatus.NO_ALARM);
+        }else{
+            resetSensors();
+            getSensors().forEach(s -> changeSensorActivationStatus(s, false));
         }
-        resetSensors();
+
         securityRepository.setArmingStatus(armingStatus);
     }
 
@@ -96,9 +99,9 @@ public class SecurityService {
      * Internal method for updating the alarm status when a sensor has been deactivated
      */
     public void handleSensorDeactivated() {
-        if (securityRepository.getAlarmStatus() == AlarmStatus.ALARM){
-            return;
-        }
+//        if (securityRepository.getAlarmStatus() == AlarmStatus.ALARM){
+//            return;
+//        }
         switch(securityRepository.getAlarmStatus()) {
             case PENDING_ALARM -> setAlarmStatus(AlarmStatus.NO_ALARM);
             case ALARM -> setAlarmStatus(AlarmStatus.PENDING_ALARM);

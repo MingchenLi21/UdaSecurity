@@ -14,6 +14,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import java.awt.image.BufferedImage;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -35,6 +37,12 @@ public class SecurityServiceTest {
 
     @Mock
     private StatusListener listener;
+
+    private Set<Sensor> getMockedSensors() {
+        Set<Sensor> sensors = new HashSet<>();
+        sensors.add(mockedSensor);
+        return sensors;
+    }
 
     SecurityService service;
 
@@ -126,16 +134,22 @@ public class SecurityServiceTest {
 
     @Test //10 If the system is armed, reset all sensors to inactive.
     void setArmingStatus_setArmed_toSensorsInactive(){
-        service.setArmingStatus(ArmingStatus.ARMED_AWAY);
+
+        when(mockedSecurityRepository.getSensors()).thenReturn(getMockedSensors());
+
+        service.setArmingStatus(ArmingStatus.ARMED_HOME);
 
         verify(mockedSecurityRepository).resetSensors();
+        verify(mockedSensor).setActive(false);
     }
 
     @Test //11 If the system is armed-home while the camera shows a cat, set the alarm status to alarm.
     void setArmingStatus_cat_ArmedHome_toAlarm(){
         when(mockedSecurityRepository.getArmingStatus()).thenReturn(ArmingStatus.ARMED_HOME);
         when(imageService.imageContainsCat(image, 50.0f)).thenReturn(true);
+
         service.processImage(image);
+        service.setArmingStatus(ArmingStatus.ARMED_HOME);
         verify(mockedSecurityRepository).setAlarmStatus(AlarmStatus.ALARM);
     }
 
@@ -150,7 +164,26 @@ public class SecurityServiceTest {
         verify(mockedSecurityRepository).addSensor(mockedSensor);
         verify(mockedSecurityRepository).getSensors();
         verify(mockedSecurityRepository).removeSensor(mockedSensor);
+    }
 
+    @Test
+    void aboutRest2(){
+        when(mockedSecurityRepository.getAlarmStatus()).thenReturn(AlarmStatus.ALARM);
+        service.handleSensorDeactivated();
+        //verify(mockedSecurityRepository).setAlarmStatus(AlarmStatus.PENDING_ALARM);
 
+    }
+
+    @Test
+    void aboutRest3(){
+        when(service.getAlarmStatus()).thenReturn(AlarmStatus.ALARM);
+
+        when(mockedSensor.getActive()).thenReturn(false);
+        service.changeSensorActivationStatus(mockedSensor, true);
+        verify(mockedSecurityRepository).getAlarmStatus();
+
+        when(mockedSensor.getActive()).thenReturn(true);
+        service.changeSensorActivationStatus(mockedSensor, false);
+        verify(mockedSecurityRepository).getArmingStatus();
     }
 }
