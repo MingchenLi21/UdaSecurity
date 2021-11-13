@@ -11,6 +11,7 @@ import Image_service.ImageService;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Service that receives information about changes to the security system. Responsible for
@@ -24,6 +25,7 @@ public class SecurityService {
     private ImageService imageService;
     private SecurityRepository securityRepository;
     private Set<StatusListener> statusListeners = new HashSet<>();
+    private boolean hasACat = false;
 
     public SecurityService(SecurityRepository securityRepository, ImageService imageService) {
         this.securityRepository = securityRepository;
@@ -39,11 +41,15 @@ public class SecurityService {
         if(armingStatus == ArmingStatus.DISARMED) {
             setAlarmStatus(AlarmStatus.NO_ALARM);
         }else{
-            resetSensors();
-            getSensors().forEach(s -> changeSensorActivationStatus(s, false));
+            if (hasACat) setAlarmStatus(AlarmStatus.ALARM);
+
+            ConcurrentSkipListSet<Sensor> nowSensors = new ConcurrentSkipListSet<>(getSensors());
+            nowSensors.stream().forEach(s -> changeSensorActivationStatus(s, false));
+
         }
 
         securityRepository.setArmingStatus(armingStatus);
+        statusListeners.forEach(StatusListener::sensorStatusChanged);
     }
 
     /**
@@ -119,6 +125,7 @@ public class SecurityService {
         } else if (sensor.getActive() && !active) {
             handleSensorDeactivated();
         } else if (sensor.getActive() && active){
+
             if (getAlarmStatus() == AlarmStatus.PENDING_ALARM){
                 setAlarmStatus(AlarmStatus.ALARM);
             }
@@ -158,9 +165,5 @@ public class SecurityService {
 
     public boolean anyActive(){
         return securityRepository.anyActive();
-    }
-
-    public void resetSensors(){
-        securityRepository.resetSensors();
     }
 }

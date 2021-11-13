@@ -139,7 +139,6 @@ public class SecurityServiceTest {
 
         service.setArmingStatus(ArmingStatus.ARMED_HOME);
 
-        verify(mockedSecurityRepository).resetSensors();
         verify(mockedSensor).setActive(false);
     }
 

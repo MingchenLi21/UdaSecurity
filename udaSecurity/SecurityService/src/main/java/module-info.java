@@ -5,4 +5,5 @@ module SecurityService {
     requires com.google.gson;
     requires java.prefs;
     requires com.google.common;
+    opens Data to com.google.gson;
 }
