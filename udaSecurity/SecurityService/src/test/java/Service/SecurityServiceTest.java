@@ -149,7 +149,7 @@ public class SecurityServiceTest {
 
         service.processImage(image);
         service.setArmingStatus(ArmingStatus.ARMED_HOME);
-        verify(mockedSecurityRepository).setAlarmStatus(AlarmStatus.ALARM);
+        verify(mockedSecurityRepository, atLeast(1)).setAlarmStatus(AlarmStatus.ALARM);
     }
 
     @Test

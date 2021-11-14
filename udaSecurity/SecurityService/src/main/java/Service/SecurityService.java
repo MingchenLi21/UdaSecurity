@@ -58,6 +58,7 @@ public class SecurityService {
      * @param cat True if a cat is detected, otherwise false.
      */
     public void catDetected(Boolean cat) {
+        hasACat = cat;
         if(cat && getArmingStatus() == ArmingStatus.ARMED_HOME) {
             setAlarmStatus(AlarmStatus.ALARM);
         } else if (!cat && !anyActive()) {
